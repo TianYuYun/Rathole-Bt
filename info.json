@@ -1,0 +1,9 @@
+{
+  "title": "Rathole 内网穿透",
+  "name": "rathole_manager",
+  "ps": "轻量、安全的 Rathole 服务端/客户端可视化管理插件",
+  "versions": "2.1.0",
+  "checks": "/www/server/panel/plugin/rathole_manager",
+  "author": "TianYuYun",
+  "home": "https://github.com/TianYuYun/Rathole-Bt"
+}
