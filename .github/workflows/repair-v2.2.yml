@@ -1,0 +1,72 @@
+name: Repair and publish v2.2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.release-payload/part06'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild validated v2.2.0 source
+        shell: bash
+        run: |
+          cat .release-payload/part00 .release-payload/part01 .release-payload/part02 .release-payload/part03 .release-payload/part04 .release-payload/part05 .release-payload/part06 | base64 -d > /tmp/rathole_manager_v2.2.0.zip
+          echo '180abff1c3470f3e726aa1a9216677b9ae05f0d3bac39fc01c84b5d0425eeb30  /tmp/rathole_manager_v2.2.0.zip' | sha256sum -c -
+          rm -rf /tmp/rm22 && mkdir -p /tmp/rm22
+          unzip -q /tmp/rathole_manager_v2.2.0.zip -d /tmp/rm22
+          cp /tmp/rm22/index.html ./index.html
+          cp /tmp/rm22/rathole_manager_main.py ./rathole_manager_main.py
+          cp /tmp/rm22/install.sh ./install.sh
+          cp /tmp/rm22/info.json ./info.json
+          cp /tmp/rm22/CHANGELOG.md ./CHANGELOG.md
+          cp /tmp/rm22/UI_BASELINE.md ./UI_BASELINE.md
+          cp /tmp/rm22/icon.png ./icon.png
+          chmod 755 rathole_manager_main.py install.sh
+          cat > update.json <<'JSON'
+          {
+            "version": "2.2.0",
+            "tag": "v2.2.0",
+            "published_at": "2026-09-10",
+            "changelog": [
+              "完整重构为当前宝塔 Modern 软件设置窗口视觉结构，采用左侧设置导航",
+              "统一弹窗、按钮、输入框、选择器、开关、表格、日志区和状态样式",
+              "读取宝塔当前主题变量，增强浅色/深色主题兼容",
+              "优化规则表格宽度、协议选择器及 Token 显示/复制操作，禁止按钮文字换行",
+              "明确展示 Rathole 安装、运行、配置、自启、核心版本和系统架构状态",
+              "保留并增强插件自身 GitHub 在线检查与在线更新，更新前自动备份插件文件"
+            ],
+            "files": [
+              "index.html",
+              "rathole_manager_main.py",
+              "install.sh",
+              "info.json",
+              "README.md",
+              "CHANGELOG.md",
+              "UI_BASELINE.md"
+            ]
+          }
+          JSON
+          python3 -m py_compile rathole_manager_main.py
+          bash -n install.sh
+          python3 -m json.tool info.json >/dev/null
+          python3 -m json.tool update.json >/dev/null
+          test "$(python3 -c "import json; print(json.load(open('info.json'))['versions'])")" = "2.2.0"
+          rm -rf .release-payload
+          rm -f .github/workflows/repair-v2.2.yml
+      - name: Commit clean v2.2.0 source
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: 发布 Rathole Manager 2.2.0 完整源码'
+          git push
