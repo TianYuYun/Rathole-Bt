@@ -14,9 +14,6 @@
     "index.html",
     "rathole_manager_main.py",
     "install.sh",
-    "info.json",
-    "README.md",
-    "CHANGELOG.md",
-    "UI_BASELINE.md"
+    "info.json"
   ]
 }
