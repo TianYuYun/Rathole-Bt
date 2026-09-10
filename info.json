@@ -4,6 +4,6 @@
   "ps": "轻量、安全的 Rathole 服务端/客户端可视化管理插件",
   "versions": "2.2.0",
   "checks": "/www/server/panel/plugin/rathole_manager",
-  "author": "TianYu",
-  "home": "https://github.com/rathole-org/rathole"
+  "author": "TianYuYun",
+  "home": "https://github.com/TianYuYun/Rathole-Bt"
 }
