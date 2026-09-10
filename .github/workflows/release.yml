@@ -1,0 +1,60 @@
+name: Release BT plugin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'info.json'
+      - 'index.html'
+      - 'rathole_manager_main.py'
+      - 'install.sh'
+      - 'CHANGELOG.md'
+      - 'README.md'
+      - 'update.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('info.json'))['versions'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate source
+        run: |
+          python3 -m py_compile rathole_manager_main.py
+          bash -n install.sh
+          python3 -m json.tool info.json >/dev/null
+          python3 -m json.tool update.json >/dev/null
+
+      - name: Build plugin zip
+        run: |
+          mkdir -p dist
+          FILES="index.html rathole_manager_main.py install.sh info.json README.md CHANGELOG.md"
+          if [ -f icon.png ]; then FILES="$FILES icon.png"; fi
+          zip -9 -j "dist/rathole_manager_v${{ steps.version.outputs.version }}.zip" $FILES
+          sha256sum dist/*.zip > dist/SHA256SUMS.txt
+
+      - name: Create release if absent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping."
+            exit 0
+          fi
+          gh release create "$TAG" dist/* \
+            --target "${{ github.sha }}" \
+            --title "Rathole-Bt $TAG" \
+            --notes-file CHANGELOG.md
