@@ -1,9 +1,642 @@
-{
-  "title": "Rathole 内网穿透",
-  "name": "rathole_manager",
-  "ps": "轻量、安全的 Rathole 服务端/客户端可视化管理插件",
-  "versions": "2.2.0",
-  "checks": "/www/server/panel/plugin/rathole_manager",
-  "author": "TianYu",
-  "home": "https://github.com/rathole-org/rathole"
+<style>
+/*
+ * Rathole Manager 2.2 - BT/aaPanel modern UI adapter
+ * Geometry follows the current panel's BtTabsModal / BtModal / form / table tokens.
+ * The plugin intentionally stays on the supported third-party index.html entry point.
+ */
+#ratholeV22{
+  --rm-primary:var(--color-primary,#20a53a);
+  --rm-primary-hover:var(--primary-button-color-hover,#178b2f);
+  --rm-primary-pressed:var(--primary-button-color-pressed,#137a29);
+  --rm-bg:var(--bt-tabs-modal-bg,var(--color-bg-2,#fff));
+  --rm-bg-soft:var(--color-bg-1,#f6f7f9);
+  --rm-bg-hover:var(--button-bg-hover,#f5f7f8);
+  --rm-text:var(--color-text-1,var(--color-text-base,#303133));
+  --rm-text-2:var(--color-text-2,#606266);
+  --rm-text-3:var(--color-text-3,#909399);
+  --rm-border:var(--color-border,#e5e7eb);
+  --rm-danger:var(--color-error,#d03050);
+  --rm-warning:var(--color-warning,#f0a020);
+  --rm-table-th:var(--color-table-th,#f7f8fa);
+  --rm-table-th-text:var(--color-table-th-text,#606266);
+  --rm-table-td:var(--color-table-td,var(--color-bg-2,#fff));
+  --rm-input-bg:var(--color-bg-2,#fff);
+  --rm-input-text:var(--input-text-color,var(--color-text-base,#303133));
+  --rm-tab-active-bg:var(--bt-tabs-modal-modern-active-bg,rgba(32,165,58,.08));
+  --rm-tab-active-color:var(--bt-tabs-modal-modern-active-color,var(--color-primary,#20a53a));
+  --rm-tab-hover-bg:var(--bt-tabs-modal-modern-hover-bg,var(--color-bg-1,#f6f7f9));
+  --rm-tab-hover-color:var(--bt-tabs-modal-modern-hover-color,var(--color-text-1,#303133));
+  height:600px;min-height:520px;width:100%;overflow:hidden;background:transparent;color:var(--rm-text);
+  font-size:12px;line-height:1.5;font-family:inherit;
 }
+#ratholeV22 *{box-sizing:border-box}
+#ratholeV22 button,#ratholeV22 input,#ratholeV22 select{font:inherit}
+#ratholeV22 button{outline:0}
+
+/* Exact modern BtTabsModal-like shell */
+#ratholeV22 .rm-tabs-modal{display:flex;height:100%;position:relative;overflow:hidden}
+#ratholeV22 .rm-tabs-nav{width:112px;min-width:112px;height:100%;padding:0 8px;overflow:auto;background:transparent}
+#ratholeV22 .rm-tab{appearance:none;display:flex;align-items:center;justify-content:flex-start;width:100%;height:32px;margin:0 0 2px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--rm-text-2);cursor:pointer;text-align:left;transition:color .15s ease,background-color .15s ease}
+#ratholeV22 .rm-tab:hover{color:var(--rm-tab-hover-color);background:var(--rm-tab-hover-bg)}
+#ratholeV22 .rm-tab.active{color:var(--rm-tab-active-color);background:var(--rm-tab-active-bg);font-weight:500}
+#ratholeV22 .rm-pane-wrapper{flex:1;min-width:0;height:100%;overflow:hidden;background:var(--rm-bg);border-left:1px solid var(--rm-border);border-radius:8px}
+#ratholeV22 .rm-pane{display:none;height:100%;overflow:auto;padding:16px;background:var(--rm-bg)}
+#ratholeV22 .rm-pane.active{display:block}
+
+/* Shared typography / sections */
+#ratholeV22 .rm-title{margin:0 0 14px;font-size:14px;line-height:22px;font-weight:500;color:var(--rm-text)}
+#ratholeV22 .rm-subtitle{margin:18px 0 10px;font-size:13px;line-height:20px;font-weight:500;color:var(--rm-text)}
+#ratholeV22 .rm-desc{color:var(--rm-text-3)}
+#ratholeV22 .rm-help{margin-top:4px;color:var(--rm-text-3);line-height:18px}
+#ratholeV22 .rm-divider{height:1px;margin:16px 0;background:var(--rm-border)}
+#ratholeV22 .rm-inline{display:flex;align-items:center;gap:8px;min-width:0}
+#ratholeV22 .rm-grow{flex:1;min-width:0}
+#ratholeV22 .rm-muted{color:var(--rm-text-3)}
+#ratholeV22 .rm-link{appearance:none;border:0;background:transparent;color:var(--rm-primary);padding:0;cursor:pointer}
+#ratholeV22 .rm-link:hover{text-decoration:underline}
+#ratholeV22 .rm-link-danger{color:var(--rm-danger)}
+
+/* Buttons: current panel medium=32px, small=26px, radius=6px */
+#ratholeV22 .rm-btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 12px;border:1px solid var(--rm-border);border-radius:6px;background:var(--rm-bg);color:var(--rm-text);cursor:pointer;white-space:nowrap;transition:background .15s ease,border-color .15s ease,color .15s ease}
+#ratholeV22 .rm-btn:hover{color:var(--rm-primary);border-color:var(--rm-primary);background:var(--rm-bg-hover)}
+#ratholeV22 .rm-btn:active{background:var(--rm-bg-hover)}
+#ratholeV22 .rm-btn-primary{color:#fff;background:var(--rm-primary);border-color:var(--rm-primary)}
+#ratholeV22 .rm-btn-primary:hover{color:#fff;background:var(--rm-primary-hover);border-color:var(--rm-primary-hover)}
+#ratholeV22 .rm-btn-primary:active{background:var(--rm-primary-pressed);border-color:var(--rm-primary-pressed)}
+#ratholeV22 .rm-btn-error{color:#fff;background:var(--rm-danger);border-color:var(--rm-danger)}
+#ratholeV22 .rm-btn-error:hover{color:#fff;background:var(--rm-danger);border-color:var(--rm-danger);filter:brightness(.94)}
+#ratholeV22 .rm-btn-small{height:26px;padding:0 10px}
+#ratholeV22 .rm-btn-text{height:26px;padding:0 5px;border-color:transparent;background:transparent;color:var(--rm-primary)}
+#ratholeV22 .rm-btn-text:hover{border-color:transparent;background:transparent;text-decoration:underline}
+#ratholeV22 .rm-btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
+#ratholeV22 .rm-button-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+/* Forms: current panel Input medium=32px, label font=12px */
+#ratholeV22 .rm-form{max-width:680px}
+#ratholeV22 .rm-form-row{display:grid;grid-template-columns:120px minmax(0,1fr);align-items:start;margin-bottom:14px}
+#ratholeV22 .rm-label{height:32px;display:flex;align-items:center;justify-content:flex-end;padding:0 20px 0 0;color:var(--rm-text-2);white-space:nowrap}
+#ratholeV22 .rm-label.required:before{content:"*";margin-right:3px;color:var(--rm-danger)}
+#ratholeV22 .rm-control{min-width:0;max-width:510px}
+#ratholeV22 .rm-input,#ratholeV22 .rm-select{width:100%;height:32px;padding:0 8px;border:1px solid var(--rm-border);border-radius:6px;outline:0;background:var(--rm-input-bg);color:var(--rm-input-text);transition:border-color .15s ease,box-shadow .15s ease}
+#ratholeV22 .rm-input:hover,#ratholeV22 .rm-select:hover{border-color:var(--border-hover-focus-color,var(--rm-primary))}
+#ratholeV22 .rm-input:focus,#ratholeV22 .rm-select:focus{border-color:var(--border-hover-focus-color,var(--rm-primary));box-shadow:0 0 0 1px rgba(32,165,58,.08)}
+#ratholeV22 .rm-input[readonly]{background:var(--rm-bg-soft);color:var(--rm-text-2)}
+#ratholeV22 .rm-input::placeholder{color:#999}
+#ratholeV22 .rm-select{appearance:none;padding-right:28px;cursor:pointer}
+#ratholeV22 .rm-select-wrap{position:relative}
+#ratholeV22 .rm-select-wrap:after{content:"";position:absolute;right:11px;top:12px;width:6px;height:6px;border-right:1.5px solid var(--rm-text-3);border-bottom:1.5px solid var(--rm-text-3);transform:rotate(45deg);pointer-events:none}
+#ratholeV22 .rm-port{width:108px;flex:none}
+#ratholeV22 .rm-host{flex:1;min-width:160px}
+
+/* Native-sized switch: 28x16 / knob 12x12 */
+#ratholeV22 .rm-switch{position:relative;width:28px;height:16px;padding:0;border:0;border-radius:8px;background:#d9d9d9;cursor:pointer;vertical-align:middle;transition:background .2s ease}
+#ratholeV22 .rm-switch span{position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .2s ease}
+#ratholeV22 .rm-switch.on{background:var(--rm-primary)}
+#ratholeV22 .rm-switch.on span{left:14px}
+#ratholeV22 .rm-switch[disabled]{opacity:.5;cursor:not-allowed}
+
+/* Alert / service management */
+#ratholeV22 .rm-alert{display:flex;gap:8px;padding:10px 12px;border:1px solid var(--rm-border);border-radius:6px;background:var(--alert-default-bg,var(--rm-bg-soft));color:var(--rm-text-2);font-size:13px;line-height:20px}
+#ratholeV22 .rm-alert.success{background:var(--alert-success-bg,#f4fbf5);border-color:var(--alert-success-border,#dcefe0)}
+#ratholeV22 .rm-alert-icon{flex:none;width:18px;height:18px;margin-top:1px;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--rm-primary)}
+#ratholeV22 .rm-service-card{max-width:720px;border:1px solid var(--rm-border);border-radius:8px;background:var(--rm-bg);overflow:hidden}
+#ratholeV22 .rm-service-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid var(--rm-border)}
+#ratholeV22 .rm-service-name{font-size:14px;font-weight:500;color:var(--rm-text)}
+#ratholeV22 .rm-status{display:inline-flex;align-items:center;gap:6px;margin-left:10px;color:var(--rm-text-2);font-size:12px}
+#ratholeV22 .rm-dot{width:7px;height:7px;border-radius:50%;background:#b8b8b8}
+#ratholeV22 .rm-dot.ok{background:var(--rm-primary)}
+#ratholeV22 .rm-dot.warn{background:var(--rm-warning)}
+#ratholeV22 .rm-dot.bad{background:var(--rm-danger)}
+#ratholeV22 .rm-service-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#ratholeV22 .rm-kv{display:grid;grid-template-columns:150px minmax(0,1fr);min-height:42px;border-bottom:1px solid var(--rm-border)}
+#ratholeV22 .rm-kv:last-child{border-bottom:0}
+#ratholeV22 .rm-kv-label{display:flex;align-items:center;padding:8px 16px;color:var(--rm-text-2);background:var(--rm-bg-soft)}
+#ratholeV22 .rm-kv-value{display:flex;align-items:center;gap:8px;padding:8px 14px;min-width:0;color:var(--rm-text)}
+
+/* Table: current DataTable th=8px, td=6px 8px */
+#ratholeV22 .rm-table-wrap{width:100%;overflow:auto;border:1px solid var(--rm-border);border-radius:8px;background:var(--rm-table-td)}
+#ratholeV22 .rm-table{width:100%;min-width:760px;border-collapse:collapse;border-spacing:0;background:var(--rm-table-td);color:var(--rm-text)}
+#ratholeV22 .rm-table th{height:36px;padding:8px;background:var(--rm-table-th);color:var(--rm-table-th-text);font-weight:500;text-align:left;border-bottom:1px solid var(--rm-border);white-space:nowrap}
+#ratholeV22 .rm-table td{height:38px;padding:6px 8px;background:var(--rm-table-td);border-bottom:1px solid var(--rm-border);vertical-align:middle}
+#ratholeV22 .rm-table tbody tr:last-child td{border-bottom:0}
+#ratholeV22 .rm-table tbody tr:hover td{background:var(--rm-bg-hover)}
+#ratholeV22 .rm-table .rm-input,#ratholeV22 .rm-table .rm-select{height:26px;border-radius:5px;padding-top:0;padding-bottom:0}
+#ratholeV22 .rm-table .rm-select-wrap:after{top:9px}
+#ratholeV22 .rm-rule-address{display:flex;align-items:center;gap:5px;min-width:230px}
+#ratholeV22 .rm-rule-address .r-host{min-width:130px}
+#ratholeV22 .rm-rule-address .r-port{width:76px;flex:none}
+#ratholeV22 .rm-token-wrap{display:flex;align-items:center;gap:4px;min-width:220px}
+#ratholeV22 .rm-token-wrap .r-token{min-width:145px}
+#ratholeV22 .rm-token-action{height:26px;padding:0 4px;border:0;background:transparent;color:var(--rm-primary);cursor:pointer;white-space:nowrap}
+#ratholeV22 .rm-token-action:hover{text-decoration:underline}
+#ratholeV22 .rm-table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+#ratholeV22 .rm-table-toolbar-right{display:flex;gap:8px}
+
+/* Logs / version */
+#ratholeV22 .rm-log-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+#ratholeV22 .rm-log{margin:0;min-height:430px;max-height:500px;overflow:auto;padding:12px 14px;border:1px solid var(--rm-border);border-radius:8px;background:#1f2329;color:#d6d9dd;white-space:pre-wrap;word-break:break-word;font:12px/1.65 Consolas,Monaco,"SFMono-Regular",monospace}
+#ratholeV22 .rm-version-table{max-width:720px}
+#ratholeV22 .rm-badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;background:rgba(32,165,58,.09);color:var(--rm-primary);white-space:nowrap}
+#ratholeV22 .rm-badge.gray{background:var(--rm-bg-soft);color:var(--rm-text-3)}
+
+/* Plugin-owned modern modal - mirrors current BtModal geometry */
+.rm22-mask{position:fixed;z-index:2147483000;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.38);font-family:inherit}
+.rm22-dialog{position:relative;width:430px;max-width:calc(100vw - 32px);overflow:hidden;border:1px solid var(--color-border,#e5e7eb);border-radius:10px;background:var(--color-modal,var(--color-bg-2,#fff));color:var(--color-text-1,#303133);box-shadow:var(--modal-boxshadow,0 8px 28px rgba(0,0,0,.16));font-size:12px}
+.rm22-dialog-header{height:53px;line-height:53px;padding:0 60px 0 20px;border-bottom:1px solid var(--modal-header-bottom-border,var(--color-border,#e5e7eb));font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm22-dialog-close{position:absolute;right:20px;top:14.5px;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--color-text-2,#606266);font-size:20px;line-height:22px;cursor:pointer}
+.rm22-dialog-close:hover{background:var(--color-bg-3,#f1f3f5);color:var(--color-text-1,#303133)}
+.rm22-dialog-content{display:flex;gap:10px;padding:20px;font-size:14px;line-height:22px;color:var(--color-text-1,#303133)}
+.rm22-dialog-icon{flex:none;width:30px;height:30px;border:2px solid var(--color-warning,#f0a020);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--color-warning,#f0a020);font-size:18px;font-weight:600}
+.rm22-dialog-text{flex:1;padding-top:4px;word-break:break-word}
+.rm22-dialog-action{display:flex;justify-content:flex-end;gap:10px;width:100%;padding:10px 18px;border-top:1px solid var(--modal-action-top-border,var(--color-border,#e5e7eb));background:var(--modal-action-bg,var(--color-bg-2,#fff))}
+.rm22-btn{height:32px;padding:0 12px;border:1px solid var(--color-border,#e5e7eb);border-radius:6px;background:var(--color-bg-2,#fff);color:var(--color-text-1,#303133);font-size:12px;font-family:inherit;cursor:pointer}
+.rm22-btn:hover{border-color:var(--color-primary,#20a53a);color:var(--color-primary,#20a53a)}
+.rm22-btn.primary{border-color:var(--color-primary,#20a53a);background:var(--color-primary,#20a53a);color:#fff}
+.rm22-btn.primary:hover{background:var(--primary-button-color-hover,#178b2f);color:#fff}
+.rm22-btn.error{border-color:var(--color-error,#d03050);background:var(--color-error,#d03050);color:#fff}
+
+/* Plugin-owned BtMessage-like center messages */
+.rm22-message-host{position:fixed;z-index:2147483100;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;font-family:inherit}
+.rm22-message{display:flex;align-items:center;min-width:210px;max-width:360px;padding:16px 20px 16px 15px;border:1px solid var(--color-border,#e5e7eb);border-radius:8px;background:var(--color-modal,var(--color-bg-2,#fff));color:var(--color-text-1,#303133);box-shadow:0 8px 26px rgba(0,0,0,.14);font-size:14px;line-height:20px;pointer-events:auto}
+.rm22-message-icon{flex:none;width:30px;height:30px;margin-right:10px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;border:2px solid currentColor}
+.rm22-message.success .rm22-message-icon{color:var(--color-primary,#20a53a)}
+.rm22-message.error .rm22-message-icon{color:var(--color-error,#d03050)}
+.rm22-message.warning .rm22-message-icon{color:var(--color-warning,#f0a020)}
+.rm22-message.info .rm22-message-icon{color:var(--color-text-2,#606266)}
+.rm22-message.loading .rm22-message-icon{color:var(--color-primary,#20a53a);border-top-color:transparent;animation:rm22spin .8s linear infinite;font-size:0}
+.rm22-message-text{flex:1;min-width:0;word-break:break-word}
+@keyframes rm22spin{to{transform:rotate(360deg)}}
+
+@media(max-width:720px){
+  #ratholeV22{height:auto;min-height:600px;overflow:visible}
+  #ratholeV22 .rm-tabs-modal{display:block;overflow:visible}
+  #ratholeV22 .rm-tabs-nav{display:flex;width:100%;height:auto;min-width:0;padding:0 0 8px;overflow:auto;border-bottom:1px solid var(--rm-border)}
+  #ratholeV22 .rm-tab{width:auto;min-width:max-content;margin:0 2px 0 0}
+  #ratholeV22 .rm-pane-wrapper{height:560px;border-left:0;border-radius:0}
+  #ratholeV22 .rm-form-row{grid-template-columns:1fr;margin-bottom:12px}
+  #ratholeV22 .rm-label{height:24px;justify-content:flex-start;padding:0}
+  #ratholeV22 .rm-control{max-width:none}
+  #ratholeV22 .rm-service-head{align-items:flex-start;flex-direction:column}
+  #ratholeV22 .rm-service-actions{justify-content:flex-start}
+  #ratholeV22 .rm-kv{grid-template-columns:120px minmax(0,1fr)}
+}
+</style>
+
+<div id="ratholeV22">
+  <div class="rm-tabs-modal">
+    <div class="rm-tabs-nav" role="tablist" aria-label="Rathole 设置">
+      <button type="button" class="rm-tab active" data-tab="service">服务管理</button>
+      <button type="button" class="rm-tab" data-tab="connection">连接配置</button>
+      <button type="button" class="rm-tab" data-tab="rules">穿透规则</button>
+      <button type="button" class="rm-tab" data-tab="logs">运行日志</button>
+      <button type="button" class="rm-tab" data-tab="version">版本管理</button>
+    </div>
+
+    <div class="rm-pane-wrapper">
+      <section class="rm-pane active" data-pane="service">
+        <div class="rm-title">服务管理</div>
+        <div class="rm-service-card">
+          <div class="rm-service-head">
+            <div>
+              <span class="rm-service-name">Rathole</span>
+              <span class="rm-status" id="rvStatus"><span class="rm-dot warn"></span><span>读取中</span></span>
+            </div>
+            <div class="rm-service-actions">
+              <button type="button" class="rm-btn rm-btn-small rm-btn-primary" data-service="start">启动</button>
+              <button type="button" class="rm-btn rm-btn-small" data-service="stop">停止</button>
+              <button type="button" class="rm-btn rm-btn-small" data-service="restart">重启</button>
+              <button type="button" class="rm-btn rm-btn-small" id="rvRefresh">刷新</button>
+            </div>
+          </div>
+          <div class="rm-kv"><div class="rm-kv-label">Rathole 版本</div><div class="rm-kv-value"><span id="rvCoreVersion">--</span><button type="button" class="rm-link" id="rvInstallStable">安装 / 升级稳定版</button></div></div>
+          <div class="rm-kv"><div class="rm-kv-label">当前模式</div><div class="rm-kv-value" id="rvModeSummary">--</div></div>
+          <div class="rm-kv"><div class="rm-kv-label">配置状态</div><div class="rm-kv-value"><span id="rvConfigState">--</span><button type="button" class="rm-link" id="rvValidate">检查配置</button></div></div>
+          <div class="rm-kv"><div class="rm-kv-label">开机自启</div><div class="rm-kv-value"><button type="button" class="rm-switch" id="rvAutoSwitch" role="switch" aria-checked="false"><span></span></button><span id="rvEnabled">--</span></div></div>
+          <div class="rm-kv"><div class="rm-kv-label">系统架构</div><div class="rm-kv-value" id="rvArch">--</div></div>
+        </div>
+        <div class="rm-divider"></div>
+        <div class="rm-alert success"><span class="rm-alert-icon">i</span><div>首次使用请先安装 Rathole 核心，再到“连接配置”和“穿透规则”保存有效配置。未完成有效配置前，插件不会允许启动服务。</div></div>
+      </section>
+
+      <section class="rm-pane" data-pane="connection">
+        <div class="rm-title">连接配置</div>
+        <div class="rm-alert success" id="rvModeTip"><span class="rm-alert-icon">i</span><div class="rm-alert-text">家庭 NAS 一般选择“客户端”，它会主动连接公网服务器，因此家庭公网 IP 变化不影响使用。</div></div>
+        <div style="height:14px"></div>
+        <div class="rm-form">
+          <div class="rm-form-row">
+            <div class="rm-label required">运行模式</div>
+            <div class="rm-control"><div class="rm-select-wrap"><select class="rm-select" id="rvMode"><option value="client">客户端（家庭 / NAS）</option><option value="server">服务端（公网服务器）</option></select></div></div>
+          </div>
+
+          <div class="rm-client-fields">
+            <div class="rm-form-row">
+              <div class="rm-label required">公网服务器</div>
+              <div class="rm-control">
+                <div class="rm-inline"><input class="rm-input rm-host" id="rvRemoteHost" placeholder="公网 IP 或域名，例如 1.2.3.4"><input class="rm-input rm-port" id="rvRemotePort" inputmode="numeric" placeholder="2333"></div>
+                <div class="rm-help">地址与隧道端口分开填写；家庭 NAS 会主动连接这里。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rm-server-fields" style="display:none">
+            <div class="rm-form-row">
+              <div class="rm-label required">隧道监听</div>
+              <div class="rm-control">
+                <div class="rm-inline"><input class="rm-input rm-host" id="rvListenHost" value="0.0.0.0"><input class="rm-input rm-port" id="rvListenPort" inputmode="numeric" value="2333"></div>
+                <div class="rm-help">通常保持 0.0.0.0；公网安全组需要允许客户端连接此端口。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rm-form-row">
+            <div class="rm-label">通道加密</div>
+            <div class="rm-control"><div class="rm-select-wrap"><select class="rm-select" id="rvTransport"><option value="noise">Noise（推荐）</option><option value="tcp">TCP（不加密）</option></select></div><div class="rm-help">建议使用 Noise 加密公网服务器与家庭 NAS 之间的 Rathole 通道。</div></div>
+          </div>
+
+          <div class="rm-server-fields rm-noise-fields" style="display:none">
+            <div class="rm-form-row">
+              <div class="rm-label">Noise 公钥</div>
+              <div class="rm-control">
+                <div class="rm-inline"><input class="rm-input rm-grow" id="rvNoisePublic" readonly placeholder="保存配置时可自动生成"><button type="button" class="rm-btn" id="rvGenerateKey">生成 / 更换</button><button type="button" class="rm-btn" id="rvCopyPublic">复制</button></div>
+                <div class="rm-help">只把公钥提供给客户端；私钥不会显示在面板中。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rm-client-fields rm-noise-fields">
+            <div class="rm-form-row">
+              <div class="rm-label required">服务端公钥</div>
+              <div class="rm-control"><input class="rm-input" id="rvNoiseRemote" placeholder="粘贴公网服务器生成的 Noise 公钥"><div class="rm-help">必须与服务端当前 Noise 公钥完全一致。</div></div>
+            </div>
+          </div>
+
+          <div class="rm-form-row">
+            <div class="rm-label"></div>
+            <div class="rm-control"><div class="rm-button-row" style="margin-top:0"><button type="button" class="rm-btn rm-btn-primary" id="rvSave">保存配置</button><button type="button" class="rm-btn" id="rvConnectionValidate">检查已保存配置</button></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rm-pane" data-pane="rules">
+        <div class="rm-table-toolbar">
+          <div><div class="rm-title" style="margin-bottom:2px">穿透规则</div><div class="rm-desc">服务端与客户端的规则名称、协议和 Token 必须一致。</div></div>
+          <div class="rm-table-toolbar-right"><button type="button" class="rm-btn" id="rvAddRule">添加规则</button><button type="button" class="rm-btn rm-btn-primary" id="rvSaveRules">保存配置</button></div>
+        </div>
+        <div class="rm-table-wrap">
+          <table class="rm-table">
+            <thead><tr><th style="width:142px">规则名称</th><th style="width:92px">协议</th><th id="rvAddrHeader">本地服务</th><th style="width:250px">Token</th><th style="width:64px">操作</th></tr></thead>
+            <tbody id="rvRules"></tbody>
+          </table>
+        </div>
+        <div class="rm-help" style="margin-top:10px">Web 场景通常只需要一条 TCP 规则。服务端建议把业务入口绑定到 127.0.0.1，再由公网 Nginx 转发。</div>
+      </section>
+
+      <section class="rm-pane" data-pane="logs">
+        <div class="rm-log-toolbar"><div><div class="rm-title" style="margin-bottom:2px">运行日志</div><div class="rm-desc">最近 200 行 systemd 日志</div></div><button type="button" class="rm-btn" id="rvLoadLogs">刷新日志</button></div>
+        <pre class="rm-log" id="rvLog">尚未读取日志</pre>
+      </section>
+
+      <section class="rm-pane" data-pane="version">
+        <div class="rm-title">版本管理</div>
+        <div class="rm-table-wrap rm-version-table">
+          <table class="rm-table" style="min-width:600px">
+            <thead><tr><th>项目</th><th>当前 / 最新版本</th><th style="width:155px">操作</th></tr></thead>
+            <tbody>
+              <tr><td>Rathole-Bt 插件</td><td><span id="rvPluginVersion">2.2.0</span> / <span id="rvPluginLatest">未检查</span> <span class="rm-badge gray">管理层</span></td><td><button type="button" class="rm-btn rm-btn-small" id="rvCheckPlugin">检查更新</button> <button type="button" class="rm-btn rm-btn-small rm-btn-primary" id="rvUpdatePlugin" style="display:none">在线更新</button></td></tr>
+              <tr><td>已安装 Rathole</td><td><span id="rvInstalledVersion">未安装</span> <span class="rm-badge">官方核心</span></td><td><button type="button" class="rm-btn rm-btn-small" id="rvInstallStableVersion">安装 / 升级</button></td></tr>
+              <tr><td>最新稳定版</td><td id="rvStableVersion">点击检查版本</td><td><button type="button" class="rm-btn rm-btn-small" id="rvCheckVersion">检查版本</button></td></tr>
+              <tr><td>开发版</td><td id="rvDevVersion">--</td><td><button type="button" class="rm-btn rm-btn-small" id="rvInstallDev">安装开发版</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="rm-help" style="margin-top:10px">默认建议使用稳定版。版本信息和安装包直接从 Rathole 官方 GitHub Release 获取。</div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function(){
+  var root=$('#ratholeV22');
+  if(root.data('initialized')) return;
+  root.data('initialized',1);
+
+  var apiBase='/plugin?action=a&name=rathole_manager&s=';
+  var statusCache={};
+  var messageHost=null;
+
+  function api(method,data,callback){
+    $.post(apiBase+method,data||{},function(resp){
+      if(typeof resp==='string'){
+        try{resp=JSON.parse(resp);}catch(e){resp={status:false,msg:resp||'接口返回异常'};}
+      }
+      callback&&callback(resp||{status:false,msg:'接口无响应'});
+    }).fail(function(xhr){callback&&callback({status:false,msg:'请求失败：HTTP '+xhr.status});});
+  }
+
+  function ensureMessageHost(){
+    if(messageHost&&messageHost.length) return messageHost;
+    messageHost=$('<div class="rm22-message-host" aria-live="polite"></div>').appendTo('body');
+    return messageHost;
+  }
+
+  function showMessage(type,text,opts){
+    opts=opts||{};
+    var icons={success:'✓',error:'×',warning:'!',info:'i',loading:''};
+    type=type||'info';
+    var el=$('<div class="rm22-message '+type+'"><div class="rm22-message-icon"></div><div class="rm22-message-text"></div></div>');
+    el.find('.rm22-message-icon').text(icons[type]||'i');
+    el.find('.rm22-message-text').text(text||'操作完成');
+    ensureMessageHost().append(el);
+    var closed=false;
+    function close(){if(closed)return;closed=true;el.fadeOut(120,function(){$(this).remove();if(messageHost&&!messageHost.children().length){messageHost.remove();messageHost=null;}});}
+    if(!opts.persistent) setTimeout(close,opts.duration||2500);
+    return {close:close,el:el};
+  }
+
+  function notify(resp,type){
+    var ok=!!(resp&&resp.status);
+    showMessage(type||(ok?'success':'error'),(resp&&resp.msg)||'操作完成');
+  }
+
+  function confirmDialog(options){
+    options=options||{};
+    var mask=$('<div class="rm22-mask"></div>');
+    var dialog=$('<div class="rm22-dialog" role="dialog" aria-modal="true"></div>');
+    var header=$('<div class="rm22-dialog-header"></div>').text(options.title||'提示');
+    var close=$('<button type="button" class="rm22-dialog-close" aria-label="关闭">×</button>');
+    var content=$('<div class="rm22-dialog-content"><div class="rm22-dialog-icon">!</div><div class="rm22-dialog-text"></div></div>');
+    content.find('.rm22-dialog-text').text(options.content||'确定继续吗？');
+    var action=$('<div class="rm22-dialog-action"></div>');
+    var cancel=$('<button type="button" class="rm22-btn"></button>').text(options.cancelText||'取消');
+    var ok=$('<button type="button" class="rm22-btn primary"></button>').text(options.confirmText||'确定');
+    if(options.danger) ok.removeClass('primary').addClass('error');
+    action.append(cancel,ok);dialog.append(header,close,content,action);mask.append(dialog).appendTo('body');
+    function dispose(){mask.remove();$(document).off('keydown.rm22dialog');}
+    close.add(cancel).on('click',dispose);
+    mask.on('click',function(e){if(e.target===mask[0]&&options.maskClosable)dispose();});
+    ok.on('click',function(){dispose();options.onConfirm&&options.onConfirm();});
+    $(document).on('keydown.rm22dialog',function(e){if(e.key==='Escape')dispose();});
+    setTimeout(function(){ok.trigger('focus');},0);
+  }
+
+  function escapeHtml(v){return $('<div>').text(v==null?'':String(v)).html();}
+
+  function randToken(){
+    var a=new Uint8Array(18);
+    if(window.crypto&&window.crypto.getRandomValues){
+      window.crypto.getRandomValues(a);
+      return Array.prototype.map.call(a,function(x){return x.toString(16).padStart(2,'0');}).join('');
+    }
+    return Math.random().toString(36).slice(2)+Date.now().toString(36);
+  }
+
+  function copyText(text){
+    text=text||'';
+    if(!text){showMessage('warning','没有可复制的内容');return;}
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showMessage('success','已复制');},function(){fallbackCopy(text);});
+    }else fallbackCopy(text);
+  }
+
+  function fallbackCopy(text){
+    var ta=$('<textarea>').val(text).css({position:'fixed',left:'-9999px',top:'-9999px'}).appendTo('body');
+    ta[0].select();
+    try{document.execCommand('copy');showMessage('success','已复制');}
+    catch(e){showMessage('error','复制失败，请手动复制');}
+    ta.remove();
+  }
+
+  function switchTab(name){
+    root.find('.rm-tab').removeClass('active').attr('aria-selected','false').filter('[data-tab="'+name+'"]').addClass('active').attr('aria-selected','true');
+    root.find('.rm-pane').removeClass('active').filter('[data-pane="'+name+'"]').addClass('active');
+    if(name==='logs') loadLogs();
+    if(name==='version'){loadReleaseInfo();checkPluginUpdate(true);}
+  }
+
+  function setSwitch(on){
+    $('#rvAutoSwitch').toggleClass('on',!!on).attr('aria-checked',on?'true':'false');
+    $('#rvEnabled').text(on?'已开启':'未开启');
+  }
+
+  function updateModeUI(){
+    var isServer=$('#rvMode').val()==='server';
+    var noise=$('#rvTransport').val()==='noise';
+    root.find('.rm-client-fields').toggle(!isServer);
+    root.find('.rm-server-fields').toggle(isServer);
+    root.find('.rm-noise-fields').each(function(){
+      var el=$(this);
+      if(el.hasClass('rm-server-fields')) el.toggle(isServer&&noise);
+      else if(el.hasClass('rm-client-fields')) el.toggle(!isServer&&noise);
+    });
+    $('#rvModeTip .rm-alert-text').text(isServer?'公网服务器选择“服务端”。它负责接收家庭 NAS 主动建立的 Rathole 隧道连接。':'家庭 NAS 一般选择“客户端”，它会主动连接公网服务器，因此家庭公网 IP 变化不影响使用。');
+    $('#rvAddrHeader').text(isServer?'公网机转发入口':'本地服务');
+    $('#rvModeSummary').text(isServer?'服务端（公网）':'客户端（家庭 / NAS）');
+    renderRules(readRulesFromTable());
+  }
+
+  function addRuleRow(row){
+    row=row||{};
+    var isServer=$('#rvMode').val()==='server';
+    var host=isServer?(row.bind_host||'127.0.0.1'):(row.local_host||'127.0.0.1');
+    var port=isServer?(row.bind_port||'18080'):(row.local_port||'80');
+    var html='<tr>'+ 
+      '<td><input class="rm-input r-name" value="'+escapeHtml(row.name||'web')+'" placeholder="web"></td>'+ 
+      '<td><div class="rm-select-wrap"><select class="rm-select r-type"><option value="tcp" '+((row.type||'tcp')==='tcp'?'selected':'')+'>TCP</option><option value="udp" '+(row.type==='udp'?'selected':'')+'>UDP</option></select></div></td>'+ 
+      '<td><div class="rm-rule-address"><input class="rm-input r-host" value="'+escapeHtml(host)+'"><span class="rm-muted">:</span><input class="rm-input r-port" inputmode="numeric" value="'+escapeHtml(port)+'"></div></td>'+ 
+      '<td><div class="rm-token-wrap"><input type="password" autocomplete="new-password" class="rm-input r-token" value="'+escapeHtml(row.token||randToken())+'"><button type="button" class="rm-token-action r-eye">显示</button><button type="button" class="rm-token-action r-copy">复制</button></div></td>'+ 
+      '<td><button type="button" class="rm-link rm-link-danger r-del">删除</button></td></tr>';
+    $('#rvRules').append(html);
+  }
+
+  function readRulesFromTable(){
+    var isServer=$('#rvMode').val()==='server',rules=[];
+    $('#rvRules tr').each(function(){
+      var tr=$(this),row={name:tr.find('.r-name').val(),type:tr.find('.r-type').val(),token:tr.find('.r-token').val()};
+      if(isServer){row.bind_host=tr.find('.r-host').val();row.bind_port=tr.find('.r-port').val();}
+      else{row.local_host=tr.find('.r-host').val();row.local_port=tr.find('.r-port').val();}
+      rules.push(row);
+    });
+    return rules;
+  }
+
+  function renderRules(rules){
+    $('#rvRules').empty();
+    (rules||[]).forEach(addRuleRow);
+    if(!(rules||[]).length) addRuleRow({name:'web'});
+  }
+
+  function collect(){
+    var isServer=$('#rvMode').val()==='server';
+    return {
+      mode:isServer?'server':'client',
+      base_host:isServer?$('#rvListenHost').val():$('#rvRemoteHost').val(),
+      base_port:isServer?$('#rvListenPort').val():$('#rvRemotePort').val(),
+      transport:$('#rvTransport').val(),
+      noise_remote_public_key:$('#rvNoiseRemote').val(),
+      services:JSON.stringify(readRulesFromTable())
+    };
+  }
+
+  function validateForm(){
+    var data=collect(),port=parseInt(data.base_port,10);
+    if(!$.trim(data.base_host)) return '请填写'+(data.mode==='server'?'监听地址':'公网服务器 IP 或域名');
+    if(!port||port<1||port>65535) return '隧道端口必须在 1-65535 之间';
+    var rules=readRulesFromTable();
+    if(!rules.length) return '至少添加一条穿透规则';
+    for(var i=0;i<rules.length;i++){
+      var r=rules[i],p=parseInt(data.mode==='server'?r.bind_port:r.local_port,10),h=data.mode==='server'?r.bind_host:r.local_host;
+      if(!/^[A-Za-z0-9_-]{1,64}$/.test($.trim(r.name||''))) return '第 '+(i+1)+' 条规则名称格式不正确';
+      if(!$.trim(h||'')) return '第 '+(i+1)+' 条规则地址不能为空';
+      if(!p||p<1||p>65535) return '第 '+(i+1)+' 条规则端口必须在 1-65535 之间';
+      if(($.trim(r.token||'')).length<8) return '第 '+(i+1)+' 条规则 Token 至少 8 个字符';
+    }
+    if(data.mode==='client'&&data.transport==='noise'&&!$.trim(data.noise_remote_public_key)) return '请填写服务端 Noise 公钥';
+    return '';
+  }
+
+  function saveConfig(){
+    var err=validateForm();
+    if(err){showMessage('error',err);return;}
+    var loading=showMessage('loading','正在保存配置...',{persistent:true});
+    api('save_config',collect(),function(resp){
+      loading.close();notify(resp);
+      if(resp&&resp.status){
+        if(resp.data&&resp.data.noise_public_key) $('#rvNoisePublic').val(resp.data.noise_public_key);
+        loadConfig();loadStatus();
+      }
+    });
+  }
+
+  function loadStatus(silent){
+    api('get_status',{},function(resp){
+      if(!resp||!resp.status){if(!silent)notify(resp);return;}
+      var d=resp.data||{};statusCache=d;
+      var statusText=d.active?'运行中':(d.installed?(d.configured?'已停止':'待配置'):'未安装');
+      var dot=d.active?'ok':(d.installed?'warn':'bad');
+      $('#rvStatus').html('<span class="rm-dot '+dot+'"></span><span>'+statusText+'</span>');
+      $('#rvModeSummary').text(d.mode==='server'?'服务端（公网）':'客户端（家庭 / NAS）');
+      $('#rvCoreVersion').text(d.version||'未安装');
+      $('#rvConfigState').text(d.configured?'配置有效':'尚未完成有效配置');
+      $('#rvArch').text(d.arch||'--');
+      setSwitch(!!d.enabled);
+      $('#rvPluginVersion').text(d.plugin_version||'2.2.0');
+      $('#rvInstalledVersion').text(d.version||'未安装');
+      root.find('[data-service="start"],[data-service="restart"]').prop('disabled',!d.installed||!d.configured);
+      $('#rvAutoSwitch').prop('disabled',!d.installed);
+    });
+  }
+
+  function loadConfig(silent){
+    api('get_config',{},function(resp){
+      if(!resp||!resp.status){if(!silent)notify(resp);return;}
+      var d=resp.data||{};
+      $('#rvMode').val(d.mode||'client');
+      if((d.mode||'client')==='server'){
+        $('#rvListenHost').val(d.base_host||'0.0.0.0');$('#rvListenPort').val(d.base_port||'2333');
+      }else{
+        $('#rvRemoteHost').val(d.base_host||'');$('#rvRemotePort').val(d.base_port||'2333');
+      }
+      $('#rvTransport').val(d.transport||'noise');
+      $('#rvNoisePublic').val(d.noise_public_key||'');
+      $('#rvNoiseRemote').val(d.noise_remote_public_key||'');
+      updateModeUI();
+      renderRules(d.services||[]);
+    });
+  }
+
+  function install(channel){
+    var label=channel==='dev'?'Rathole 开发版':'Rathole 稳定版';
+    var loading=showMessage('loading','正在安装 / 升级 '+label+'...',{persistent:true});
+    api('install_core',{channel:channel},function(resp){
+      loading.close();notify(resp);loadStatus(true);loadReleaseInfo(true);
+    });
+  }
+
+  function loadLogs(){
+    $('#rvLog').text('正在读取日志...');
+    api('get_logs',{lines:200},function(resp){
+      if(!resp||!resp.status){$('#rvLog').text((resp&&resp.msg)||'读取日志失败');notify(resp);return;}
+      $('#rvLog').text((resp.data&&resp.data.log)||'暂无日志');
+    });
+  }
+
+  function loadReleaseInfo(silent){
+    api('get_release_info',{},function(resp){
+      if(!resp||!resp.status){$('#rvStableVersion').text('获取失败');if(!silent)notify(resp);return;}
+      var d=resp.data||{};
+      $('#rvStableVersion').text(d.stable||'--');
+      $('#rvDevVersion').text(d.dev_name||d.dev||'--');
+      $('#rvInstalledVersion').text(d.current||'未安装');
+      $('#rvPluginVersion').text(d.plugin_version||'2.2.0');
+    });
+  }
+
+  function checkPluginUpdate(silent){
+    api('get_plugin_update',{},function(resp){
+      if(!resp||!resp.status){$('#rvPluginLatest').text('检查失败');$('#rvUpdatePlugin').hide();if(!silent)notify(resp);return;}
+      var d=resp.data||{};
+      $('#rvPluginVersion').text(d.current||'2.2.0');
+      $('#rvPluginLatest').text(d.latest||'--');
+      $('#rvUpdatePlugin').toggle(!!d.available);
+      if(!silent) showMessage('success',d.available?('发现新版本 '+d.latest):'当前插件已是最新版本');
+    });
+  }
+
+  function installPluginUpdate(){
+    confirmDialog({
+      title:'在线更新 Rathole-Bt',
+      content:'更新会先备份当前插件文件，不会覆盖 /etc/rathole 和已有穿透配置。确定开始在线更新吗？',
+      confirmText:'开始更新',
+      onConfirm:function(){
+        var loading=showMessage('loading','正在下载并安装插件更新...',{persistent:true});
+        api('install_plugin_update',{},function(resp){
+          loading.close();notify(resp);
+          if(resp&&resp.status){$('#rvUpdatePlugin').hide();if(resp.data&&resp.data.version)$('#rvPluginLatest').text(resp.data.version);}
+        });
+      }
+    });
+  }
+
+  function validateSaved(){api('validate_config',{},notify);}
+
+  root.on('click','.rm-tab',function(){switchTab($(this).data('tab'));});
+  $('#rvMode').on('change',updateModeUI);
+  $('#rvTransport').on('change',updateModeUI);
+  $('#rvRefresh').on('click',function(){loadStatus();loadConfig(true);});
+  $('#rvSave,#rvSaveRules').on('click',saveConfig);
+  $('#rvValidate,#rvConnectionValidate').on('click',validateSaved);
+  $('#rvInstallStable,#rvInstallStableVersion').on('click',function(){install('stable');});
+  $('#rvInstallDev').on('click',function(){
+    confirmDialog({title:'安装 Rathole 开发版',content:'开发版用于测试，稳定性不如正式版。确定继续安装吗？',confirmText:'继续安装',onConfirm:function(){install('dev');}});
+  });
+  $('#rvCheckVersion').on('click',function(){var m=showMessage('loading','正在检查官方版本...',{persistent:true});api('get_release_info',{},function(resp){m.close();if(!resp||!resp.status){notify(resp);return;}var d=resp.data||{};$('#rvStableVersion').text(d.stable||'--');$('#rvDevVersion').text(d.dev_name||d.dev||'--');$('#rvInstalledVersion').text(d.current||'未安装');showMessage('success','版本信息已更新');});});
+  $('#rvCheckPlugin').on('click',function(){checkPluginUpdate(false);});
+  $('#rvUpdatePlugin').on('click',installPluginUpdate);
+  $('#rvGenerateKey').on('click',function(){
+    confirmDialog({title:'生成 / 更换 Noise 密钥',content:'更换服务端密钥后，所有客户端都必须更新为新的公钥，并重新保存配置。确定继续吗？',confirmText:'生成新密钥',onConfirm:function(){api('generate_noise_keypair',{},function(resp){notify(resp);if(resp&&resp.status&&resp.data){$('#rvNoisePublic').val(resp.data.public_key||'');showMessage('warning','新公钥已生成，请保存配置并同步更新客户端');}});}});
+  });
+  $('#rvCopyPublic').on('click',function(){copyText($('#rvNoisePublic').val());});
+  $('#rvAddRule').on('click',function(){addRuleRow({name:'service'+($('#rvRules tr').length+1)});});
+  $('#rvRules').on('click','.r-del',function(){if($('#rvRules tr').length<=1){showMessage('warning','至少保留一条规则');return;}$(this).closest('tr').remove();});
+  $('#rvRules').on('click','.r-eye',function(){var input=$(this).siblings('.r-token');var show=input.attr('type')==='password';input.attr('type',show?'text':'password');$(this).text(show?'隐藏':'显示');});
+  $('#rvRules').on('click','.r-copy',function(){copyText($(this).siblings('.r-token').val());});
+  root.find('[data-service]').on('click',function(){
+    var cmd=$(this).data('service');
+    var words={start:'启动',stop:'停止',restart:'重启'};
+    var run=function(){var loading=showMessage('loading','正在'+(words[cmd]||'操作')+' Rathole...',{persistent:true});api('service_action',{cmd:cmd},function(resp){loading.close();notify(resp);loadStatus(true);if(cmd==='start'||cmd==='restart')setTimeout(loadLogs,500);});};
+    if(cmd==='stop') confirmDialog({title:'停止 Rathole',content:'停止后现有穿透连接会立即中断。确定停止服务吗？',confirmText:'停止',danger:true,onConfirm:run});
+    else run();
+  });
+  $('#rvAutoSwitch').on('click',function(){
+    if($(this).prop('disabled')) return;
+    var cmd=statusCache.enabled?'disable':'enable';
+    var loading=showMessage('loading',cmd==='enable'?'正在开启开机自启...':'正在关闭开机自启...',{persistent:true});
+    api('service_action',{cmd:cmd},function(resp){loading.close();notify(resp);loadStatus(true);});
+  });
+  $('#rvLoadLogs').on('click',loadLogs);
+
+  root.find('.rm-tab').attr('aria-selected','false').filter('.active').attr('aria-selected','true');
+  loadStatus(true);loadConfig(true);
+})();
+</script>

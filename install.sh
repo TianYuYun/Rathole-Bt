@@ -21,13 +21,16 @@ install_plugin() {
 
     if [ ! -f "$CONFIG_FILE" ]; then
         cat > "$CONFIG_FILE" <<'CFG'
-# Rathole-Bt configuration placeholder.
+# Rathole Manager configuration placeholder.
 # Save a valid Server or Client configuration in the BT panel before starting.
 CFG
     fi
     chown root:rathole "$CONFIG_FILE" 2>/dev/null || true
     chmod 640 "$CONFIG_FILE"
 
+    # Upgrade compatibility: mark an existing V1 configuration as ready only if it
+    # already contains a real [server] or [client] section. Otherwise stop the old
+    # restart loop and wait for the user to save a valid configuration.
     if grep -Eq '^\[(server|client)\][[:space:]]*$' "$CONFIG_FILE" 2>/dev/null; then
         touch "$READY_FILE"
         chmod 600 "$READY_FILE"
@@ -66,17 +69,18 @@ UNIT
 
     systemctl daemon-reload >/dev/null 2>&1 || true
     systemctl enable rathole >/dev/null 2>&1 || true
+
     chmod 755 "$PLUGIN_DIR" 2>/dev/null || true
-    chmod 755 "$PLUGIN_DIR/rathole_manager_main.py" "$PLUGIN_DIR/install.sh" 2>/dev/null || true
-    echo "Rathole-Bt installed. Save a valid configuration before starting Rathole."
+    chmod 755 "$PLUGIN_DIR"/*.py "$PLUGIN_DIR"/install.sh 2>/dev/null || true
+    echo "Rathole Manager 2.2 installed. Save a valid configuration before starting Rathole."
 }
 
 uninstall_plugin() {
     systemctl disable --now rathole >/dev/null 2>&1 || true
     rm -f "$SERVICE_FILE"
     systemctl daemon-reload >/dev/null 2>&1 || true
-    echo "Rathole-Bt plugin service removed."
-    echo "Rathole binary, /etc/rathole and state files are preserved to avoid accidental data loss."
+    echo "Rathole Manager plugin and systemd unit removed."
+    echo "Rathole binary and /etc/rathole are preserved to avoid accidental data loss."
 }
 
 case "${1:-}" in
