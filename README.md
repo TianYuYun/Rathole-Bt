@@ -22,7 +22,7 @@ Rathole-Bt 是一个面向 **宝塔 Linux 面板** 的 Rathole 可视化管理�
 
 ## 界面
 
-2.2 起重新按照当前宝塔 Modern 软件设置窗口的视觉规范设计，采用左侧设置导航，统一按钮、表单、选择器、开关、表格、弹窗、状态和日志区域的尺寸与交互。
+界面按照当前宝塔 Modern 软件设置窗口的视觉规范设计，采用左侧设置导航，统一按钮、表单、选择器、开关、表格、弹窗、状态和日志区域的尺寸与交互。
 
 插件继续使用宝塔第三方插件标准兼容入口，不修改宝塔核心文件，也不依赖宝塔私有 Vite/Vue 模块，从而降低面板升级后的兼容风险。
 
@@ -130,27 +130,21 @@ systemd 服务        /etc/systemd/system/rathole.service
 
 ## 在线更新
 
-插件会读取本仓库的 `update.json` 检查新版本。检测到更新后可直接在插件内执行在线更新。
-
-发布流程由 GitHub Actions 完成：
+Rathole-Bt 的唯一插件更新源为本仓库的 **GitHub Releases**。插件通过 GitHub Releases API 检查最新版本，并直接下载对应的完整 ZIP 安装包。
 
 ```text
-更新 main 源码
-      |
-      v
-读取 info.json 版本
-      |
-      v
-代码检查
-      |
-      v
-生成插件 ZIP
-      |
-      v
-创建对应 Git Tag / GitHub Release
+GitHub Repository
+      ↓
+GitHub Actions
+      ↓
+GitHub Release ZIP
+      ↓
+插件校验并升级
 ```
 
-因此仓库根目录始终保存**完整、可发布的插件源码**，Release 安装包直接由这些源码生成。
+更新过程会校验 Release 版本、安装包 SHA256、Python 语法、Shell 语法以及 `info.json` 版本一致性；升级前自动备份当前插件文件，替换失败时自动回滚。
+
+本项目不使用 `raw.githubusercontent.com` 逐文件更新，不使用第三方镜像或国内中转。
 
 ## 兼容性
 
