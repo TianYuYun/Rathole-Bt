@@ -23,7 +23,7 @@ except Exception:
 
 
 class rathole_manager_main:
-    PLUGIN_VERSION = '1.0.0'
+    PLUGIN_VERSION = '1.0.1'
     BINARY = '/usr/local/bin/rathole'
     CONFIG_DIR = '/etc/rathole'
     CONFIG_FILE = '/etc/rathole/rathole.toml'
@@ -346,16 +346,27 @@ class rathole_manager_main:
     def get_release_info(self, args):
         try:
             stable = self._github_json(self.GITHUB_API + '/releases/latest')
-            dev = self._github_json(self.GITHUB_API + '/releases/tags/dev-latest')
             return self._ok('版本信息获取成功', {
                 'stable': stable.get('tag_name', ''),
-                'dev': dev.get('tag_name', 'dev-latest'),
-                'dev_name': dev.get('name', ''),
                 'current': self._binary_version(),
                 'plugin_version': self.PLUGIN_VERSION,
             })
         except Exception as exc:
             return self._err('获取 Rathole 官方版本信息失败：%s' % exc)
+
+    def uninstall_core(self, args):
+        try:
+            self._run(['systemctl', 'stop', self.SERVICE], timeout=10)
+            if os.path.isfile(self.BINARY):
+                os.remove(self.BINARY)
+            if os.path.exists(self.READY_FILE):
+                os.remove(self.READY_FILE)
+            state = self._read_state()
+            state['release_tag'] = ''
+            self._write_state(state)
+            return self._ok('Rathole 核心已卸载，/etc/rathole 配置保留未删除')
+        except Exception as exc:
+            return self._err('卸载失败：%s' % exc)
 
     def install_core(self, args):
         channel = str(self._arg(args, 'channel', 'stable')).strip().lower()
@@ -494,6 +505,46 @@ class rathole_manager_main:
             return self._ok('Noise 密钥已生成，只把公钥提供给客户端', {'public_key': public_key})
         except Exception as exc:
             return self._err(exc)
+
+    def test_connectivity(self, args):
+        import socket
+        host = str(self._arg(args, 'host', '')).strip()
+        port = str(self._arg(args, 'port', '')).strip()
+        if not host or not port:
+            state = self._read_state()
+            mode = state.get('mode', 'client')
+            base_addr = state.get('base_addr', '').strip()
+            if not base_addr:
+                return self._err('尚未保存连接配置，请先在连接配置页保存')
+            host, port = self._split_addr(base_addr, '', '2333')
+        else:
+            mode = str(self._arg(args, 'mode', 'client')).strip()
+        if not host or not port:
+            return self._err('连接地址不完整')
+        try:
+            port_num = int(port)
+        except Exception:
+            return self._err('端口格式错误')
+        test_host = '127.0.0.1' if host in ('0.0.0.0', '::') else host
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            result = sock.connect_ex((test_host, port_num))
+            sock.close()
+        except socket.timeout:
+            return self._err('连接 %s:%s 超时（5 秒），请检查网络和防火墙' % (test_host, port_num))
+        except Exception as exc:
+            return self._err('连接测试异常：%s' % exc)
+        if result == 0:
+            if mode == 'server':
+                return self._ok('Rathole 服务端端口 %s 正在监听，连接正常' % port)
+            else:
+                return self._ok('成功连接到 %s:%s，网络畅通' % (test_host, port))
+        else:
+            if mode == 'server':
+                return self._err('端口 %s 未监听，Rathole 可能未启动或监听配置有误' % port)
+            else:
+                return self._err('无法连接到 %s:%s，请检查服务器地址和防火墙设置' % (test_host, port))
 
     def validate_config(self, args):
         if not os.path.isfile(self.BINARY):
