@@ -1,0 +1,20 @@
+{
+  "version": "2.1.0",
+  "tag": "v2.1.0",
+  "published_at": "2026-09-10",
+  "changelog": [
+    "重构宝塔 11.x 风格管理界面",
+    "地址与端口拆分填写，修复配置校验歧义",
+    "明确显示 Rathole 安装、运行、自启和版本状态",
+    "未保存有效配置时禁止启动，避免 systemd 无限重启",
+    "增加插件自身 GitHub 在线检查与在线更新"
+  ],
+  "files": [
+    "index.html",
+    "rathole_manager_main.py",
+    "install.sh",
+    "info.json",
+    "README.md",
+    "CHANGELOG.md"
+  ]
+}
